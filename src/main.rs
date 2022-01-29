@@ -1,14 +1,20 @@
 #![feature(test)]
+#![feature(const_fn_floating_point_arithmetic)]
+
+mod direction;
+mod tilemap;
 
 extern crate test;
 
+use direction::Direction;
 use minifb::{Key, Window, WindowOptions};
+use tilemap::Tile;
 use tiny_skia::{Color, Pixmap};
 
-const WIDTH: usize = 100;
-const HEIGHT: usize = 100;
+const WIDTH: usize = 10;
+const HEIGHT: usize = 10;
 
-const TILE_SIZE: usize = 10;
+const TILE_SIZE: usize = 100;
 
 fn main() {
     pretty_env_logger::init();
@@ -27,6 +33,11 @@ fn main() {
         let window_size = window.get_size();
         let mut pixmap = Pixmap::new(window_size.0 as u32, window_size.1 as u32).unwrap();
         pixmap.fill(Color::from_rgba8(0xf7, 0x25, 0x85, 0xff));
+
+        Tile::Mirror {
+            normal: Direction::East,
+        }
+        .render(&mut pixmap, 0.0, 0.0, TILE_SIZE as f32);
 
         draw_pixmap(&pixmap, &mut window);
     }
