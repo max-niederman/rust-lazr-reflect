@@ -16,8 +16,8 @@ impl Tile {
                     x: x + size / 2.0,
                     y: y + size / 2.0,
                 };
-                let radius = size / 2.0;
-                let angle = normal.angle_to(&Direction::East) + Angle::RIGHT;
+                let radius = size / 2.0 - 8.0;
+                let angle = normal.angle_to(Direction::East) + Angle::RIGHT;
 
                 let mut pb = PathBuilder::new();
                 pb.move_to(
@@ -25,19 +25,12 @@ impl Tile {
                     center.y + angle.sin() * radius,
                 );
                 pb.line_to(
-                    center.x - angle.sin() * radius,
-                    center.y - angle.cos() * radius,
+                    center.x - angle.cos() * radius,
+                    center.y - angle.sin() * radius,
                 );
                 let path = pb.finish().unwrap();
 
                 let mut paint = Paint::default();
-                paint.set_color(Color::BLACK);
-                pixmap.fill_rect(
-                    Rect::from_xywh(x, y, size, size).unwrap(),
-                    &paint,
-                    Transform::identity(),
-                    None,
-                );
                 paint.set_color(Color::WHITE);
                 paint.anti_alias = true;
 
@@ -57,4 +50,48 @@ pub struct Tilemap {
     tiles: Vec<Tile>,
     width: u32,
     height: u32,
+}
+
+impl Tilemap {
+    pub fn new(width: u32, height: u32) -> Self {
+        Self {
+            tiles: vec![Tile::Empty; width as usize * height as usize],
+            width,
+            height,
+        }
+    }
+
+    pub fn render(&self, pixmap: &mut Pixmap) {
+        let tile_size = pixmap.width() / self.width;
+        for (i, tile) in self.tiles.iter().enumerate() {
+            tile.render(
+                pixmap,
+                (i as u32 % self.width * tile_size) as f32,
+                (i as u32 / self.width * tile_size) as f32,
+                tile_size as f32,
+            );
+        }
+    }
+
+    pub fn size(&self) -> (u32, u32) {
+        (self.width, self.height)
+    }
+
+    pub fn len(&self) -> u32 {
+        self.width * self.height
+    }
+}
+
+impl std::ops::Index<u32> for Tilemap {
+    type Output = Tile;
+
+    fn index(&self, index: u32) -> &Self::Output {
+        &self.tiles[index as usize]
+    }
+}
+
+impl std::ops::IndexMut<u32> for Tilemap {
+    fn index_mut(&mut self, index: u32) -> &mut Self::Output {
+        &mut self.tiles[index as usize]
+    }
 }

@@ -1,4 +1,4 @@
-use std::f32::consts::{FRAC_PI_8, SQRT_2};
+use std::f32::consts::{FRAC_1_SQRT_2, FRAC_PI_4};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Direction {
@@ -13,16 +13,28 @@ pub enum Direction {
 }
 
 impl Direction {
-    /// Angle in the clockwise direction between two directions.
-    pub const fn angle_between(a: &Self, b: &Self) -> Angle {
-        Angle::from_octants(
-            Angle::from_direction_to_horizontal(a).octants()
-                - Angle::from_direction_to_horizontal(b).octants(),
-        )
+    pub const fn angle_to(&self, other: Self) -> Angle {
+        Angle::between(*self, other)
     }
 
-    pub const fn angle_to(&self, other: &Self) -> Angle {
-        Self::angle_between(self, other)
+    pub const fn rotated_from(start: Self, angle: Angle) -> Self {
+        Self::rotated_from_east(Angle::from_octants(
+            Angle::between(start, Self::East).octants() + angle.octants(),
+        ))
+    }
+
+    pub const fn rotated_from_east(angle: Angle) -> Self {
+        match angle.octants() {
+            0 => Direction::East,
+            1 => Direction::Northeast,
+            2 => Direction::North,
+            3 => Direction::Northwest,
+            4 => Direction::West,
+            5 => Direction::Southwest,
+            6 => Direction::South,
+            7 => Direction::Southeast,
+            _ => unreachable!(),
+        }
     }
 }
 
@@ -44,7 +56,7 @@ impl Angle {
         }
     }
 
-    pub const fn from_direction_to_horizontal(direction: &Direction) -> Self {
+    pub const fn from_horizontal(direction: Direction) -> Self {
         Self {
             octants: match direction {
                 Direction::East => 0,
@@ -57,6 +69,11 @@ impl Angle {
                 Direction::Southeast => 7,
             },
         }
+    }
+
+    /// Angle in the clockwise direction between two directions.
+    pub const fn between(a: Direction, b: Direction) -> Self {
+        Self::from_octants(Self::from_horizontal(b).octants() - Self::from_horizontal(a).octants())
     }
 
     pub const fn octants(&self) -> u8 {
@@ -80,19 +97,19 @@ impl Angle {
     }
 
     pub const fn radians(&self) -> f32 {
-        self.octants as f32 * FRAC_PI_8
+        self.octants as f32 * FRAC_PI_4
     }
 
     pub const fn sin(&self) -> f32 {
         match self.octants {
             0 => 0.0,
-            1 => SQRT_2,
+            1 => FRAC_1_SQRT_2,
             2 => 1.0,
-            3 => SQRT_2,
+            3 => FRAC_1_SQRT_2,
             4 => 0.0,
-            5 => -SQRT_2,
+            5 => -FRAC_1_SQRT_2,
             6 => -1.0,
-            7 => -SQRT_2,
+            7 => -FRAC_1_SQRT_2,
             _ => unreachable!(),
         }
     }
@@ -100,13 +117,13 @@ impl Angle {
     pub const fn cos(&self) -> f32 {
         match self.octants {
             0 => 1.0,
-            1 => SQRT_2,
+            1 => FRAC_1_SQRT_2,
             2 => 0.0,
-            3 => -SQRT_2,
+            3 => -FRAC_1_SQRT_2,
             4 => -1.0,
-            5 => -SQRT_2,
+            5 => -FRAC_1_SQRT_2,
             6 => 0.0,
-            7 => SQRT_2,
+            7 => FRAC_1_SQRT_2,
             _ => unreachable!(),
         }
     }
@@ -129,3 +146,16 @@ impl_angle_op!(Sub::sub);
 impl_angle_op!(Mul::mul);
 impl_angle_op!(Div::div);
 impl_angle_op!(Rem::rem);
+
+#[test]
+pub fn trig_fns() {
+    for octant in 0..8 {
+        let angle = Angle::from_octants(octant);
+        println!("testing angle {:#?}", angle);
+        assert!((angle.sin() - angle.radians().sin()).abs() < 0.000001);
+        assert!((angle.cos() - angle.radians().cos()).abs() < 0.000001);
+    }
+}
+
+#[test]
+pub fn angle() {}

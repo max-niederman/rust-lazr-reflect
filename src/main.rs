@@ -6,23 +6,23 @@ mod tilemap;
 
 extern crate test;
 
-use direction::Direction;
+use direction::{Angle, Direction};
 use minifb::{Key, Window, WindowOptions};
-use tilemap::Tile;
+use tilemap::{Tile, Tilemap};
 use tiny_skia::{Color, Pixmap};
 
-const WIDTH: usize = 10;
-const HEIGHT: usize = 10;
+const WIDTH: u32 = 10;
+const HEIGHT: u32 = 10;
 
-const TILE_SIZE: usize = 100;
+const TILE_SIZE: u32 = 100;
 
 fn main() {
     pretty_env_logger::init();
 
     let mut window = Window::new(
         "Rust Lazr Reflection Experiment",
-        WIDTH * TILE_SIZE,
-        HEIGHT * TILE_SIZE,
+        WIDTH as usize * TILE_SIZE as usize,
+        HEIGHT as usize * TILE_SIZE as usize,
         WindowOptions {
             ..WindowOptions::default()
         },
@@ -34,10 +34,13 @@ fn main() {
         let mut pixmap = Pixmap::new(window_size.0 as u32, window_size.1 as u32).unwrap();
         pixmap.fill(Color::from_rgba8(0xf7, 0x25, 0x85, 0xff));
 
-        Tile::Mirror {
-            normal: Direction::East,
+        let mut tilemap = Tilemap::new(WIDTH, HEIGHT);
+        for i in 0..tilemap.len() {
+            tilemap[i as u32] = Tile::Mirror {
+                normal: Direction::rotated_from_east(Angle::from_octants(i as u8)),
+            };
         }
-        .render(&mut pixmap, 0.0, 0.0, TILE_SIZE as f32);
+        tilemap.render(&mut pixmap);
 
         draw_pixmap(&pixmap, &mut window);
     }
@@ -70,11 +73,11 @@ mod tests {
     use test::Bencher;
 
     #[bench]
-    fn draw_pixmap_time(b: &mut Bencher) {
+    fn draw_pixmap(b: &mut Bencher) {
         let mut window = Window::new(
-            "Rust Lazr Reflection Experiment",
-            WIDTH * TILE_SIZE,
-            HEIGHT * TILE_SIZE,
+            "Rust Lazr Reflection Benchmark",
+            1000,
+            1000,
             WindowOptions {
                 ..WindowOptions::default()
             },
@@ -82,9 +85,34 @@ mod tests {
         .unwrap();
 
         b.iter(|| {
-            let mut pixmap = Pixmap::new(WIDTH as u32, HEIGHT as u32).unwrap();
+            let mut pixmap = Pixmap::new(1000, 1000).unwrap();
             pixmap.fill(Color::from_rgba8(0xf7, 0x25, 0x85, 0xff));
-            draw_pixmap(&pixmap, &mut window);
+            super::draw_pixmap(&pixmap, &mut window);
+        })
+    }
+    #[bench]
+    fn draw_tilemap(b: &mut Bencher) {
+        let mut window = Window::new(
+            "Rust Lazr Reflection Experiment",
+            1000,
+            1000,
+            WindowOptions {
+                ..WindowOptions::default()
+            },
+        )
+        .unwrap();
+
+        b.iter(|| {
+            let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+            pixmap.fill(Color::from_rgba8(0xf7, 0x25, 0x85, 0xff));
+            let mut tilemap = Tilemap::new(WIDTH, HEIGHT);
+            for i in 0..tilemap.len() {
+                tilemap[i as u32] = Tile::Mirror {
+                    normal: Direction::rotated_from_east(Angle::from_octants(i as u8)),
+                };
+            }
+            tilemap.render(&mut pixmap);
+            super::draw_pixmap(&pixmap, &mut window);
         })
     }
 }
