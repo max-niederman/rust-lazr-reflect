@@ -1,0 +1,9 @@
+# Rust
+/target
+
+# Direnv
+.direnv
+
+# Performance Profiling
+perf.data
+flamegraph.svg

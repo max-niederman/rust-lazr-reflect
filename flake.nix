@@ -21,14 +21,25 @@
       {
         devShell = pkgs.mkShell {
           nativeBuildInputs = with pkgs; [
-            # Rust
             rust.dev.toolchain
             mold
+            cmake
           ];
+
+          LD_LIBRARY_PATH = nixpkgs.lib.strings.makeLibraryPath
+            (with pkgs; [
+              xorg.libX11
+              xorg.libXcursor
+              # xorg.libXrandr
+              libxkbcommon
+            ]);
 
           # redirect ld calls to mold
           MOLD_PATH = "${pkgs.mold}/bin/mold";
           LD_PRELOAD = "${pkgs.mold}/lib/mold/mold-wrapper.so";
+
+          # required for minifb crate
+          XKBCOMMON_LIB_DIR = "${pkgs.libxkbcommon}/lib";
         };
       }
     );

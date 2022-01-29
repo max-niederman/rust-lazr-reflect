@@ -1,0 +1,10 @@
+[package]
+name = "rust-lazr-reflect"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tiny-skia = "0.6"
+minifb = "0.20"
+log = "0.4"
+pretty_env_logger = "0.4"
