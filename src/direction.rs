@@ -1,5 +1,7 @@
 use std::f32::consts::{FRAC_1_SQRT_2, FRAC_PI_4};
 
+use crate::vector::Vector;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Direction {
     East,
@@ -19,7 +21,7 @@ impl Direction {
 
     pub const fn rotated_from(start: Self, angle: Angle) -> Self {
         Self::rotated_from_east(Angle::from_octants(
-            Angle::between(start, Self::East).octants() + angle.octants(),
+            start.angle_to(Self::East).octants() + angle.octants(),
         ))
     }
 
@@ -35,6 +37,12 @@ impl Direction {
             7 => Direction::Southeast,
             _ => unreachable!(),
         }
+    }
+}
+
+impl Into<Vector<f32, 2>> for Direction {
+    fn into(self) -> Vector<f32, 2> {
+        self.angle_to(Self::East).into()
     }
 }
 
@@ -73,7 +81,12 @@ impl Angle {
 
     /// Angle in the clockwise direction between two directions.
     pub const fn between(a: Direction, b: Direction) -> Self {
-        Self::from_octants(Self::from_horizontal(b).octants() - Self::from_horizontal(a).octants())
+        Self::from_octants(
+            Self::from_horizontal(b)
+                .octants()
+                // it's fine to wrap around, since 256 is a multiple of 8
+                .wrapping_sub(Self::from_horizontal(a).octants()),
+        )
     }
 
     pub const fn octants(&self) -> u8 {
@@ -129,6 +142,12 @@ impl Angle {
     }
 }
 
+impl Into<Vector<f32, 2>> for Angle {
+    fn into(self) -> Vector<f32, 2> {
+        Vector::new([self.cos(), self.sin()])
+    }
+}
+
 macro_rules! impl_angle_op {
     ($op:ident :: $method:ident) => {
         impl std::ops::$op for Angle {
@@ -156,6 +175,3 @@ pub fn trig_fns() {
         assert!((angle.cos() - angle.radians().cos()).abs() < 0.000001);
     }
 }
-
-#[test]
-pub fn angle() {}

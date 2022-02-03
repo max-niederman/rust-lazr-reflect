@@ -1,8 +1,11 @@
 #![feature(test)]
 #![feature(const_fn_floating_point_arithmetic)]
+#![feature(array_zip)]
 
 mod direction;
+mod laser;
 mod tilemap;
+mod vector;
 
 extern crate test;
 
@@ -37,7 +40,7 @@ fn main() {
         let mut tilemap = Tilemap::new(WIDTH, HEIGHT);
         for i in 0..tilemap.len() {
             tilemap[i as u32] = Tile::Mirror {
-                normal: Direction::rotated_from_east(Angle::from_octants(i as u8)),
+                normal: Direction::rotated_from_east(Angle::from_octants((i % 0xFF) as u8)),
             };
         }
         tilemap.render(&mut pixmap);

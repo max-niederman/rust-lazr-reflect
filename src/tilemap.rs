@@ -1,6 +1,6 @@
+use crate::{direction::*, vector::Vector};
+use std::ops::{Index, IndexMut};
 use tiny_skia::*;
-
-use crate::direction::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Tile {
@@ -82,7 +82,7 @@ impl Tilemap {
     }
 }
 
-impl std::ops::Index<u32> for Tilemap {
+impl Index<u32> for Tilemap {
     type Output = Tile;
 
     fn index(&self, index: u32) -> &Self::Output {
@@ -90,8 +90,16 @@ impl std::ops::Index<u32> for Tilemap {
     }
 }
 
-impl std::ops::IndexMut<u32> for Tilemap {
+impl IndexMut<u32> for Tilemap {
     fn index_mut(&mut self, index: u32) -> &mut Self::Output {
         &mut self.tiles[index as usize]
+    }
+}
+
+impl Index<Vector<u32, 2>> for Tilemap {
+    type Output = Tile;
+
+    fn index(&self, index: Vector<u32, 2>) -> &Self::Output {
+        &self.tiles[(index[1] * self.width + index[0]) as usize]
     }
 }
